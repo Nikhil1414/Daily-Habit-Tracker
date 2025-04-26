@@ -3,160 +3,845 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Tracker</title>
+  <title>Daily Tracker Pro</title>
   <style>
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2980b9;
+      --success-color: #2ecc71;
+      --warning-color: #f39c12;
+      --danger-color: #e74c3c;
+      --background-color: #f5f7fa;
+      --card-color: #ffffff;
+      --text-color: #34495e;
+      --border-radius: 10px;
+      --shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
     body {
-      font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
+      font-family: 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
       padding: 20px;
-      max-width: 600px;
-      margin: auto;
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.6;
     }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .card {
+      background: var(--card-color);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
     h1 {
-      text-align: center;
-      color: #d35400;
+      color: var(--primary-color);
+      margin-bottom: 5px;
+      font-size: 2rem;
     }
+    
     .date {
-      text-align: center;
-      margin-bottom: 20px;
-      font-weight: bold;
-      font-size: 18px;
+      font-size: 1.2rem;
+      color: var(--text-color);
+      font-weight: 500;
     }
+    
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+    }
+    
     .task {
-      margin: 10px 0;
-      padding: 10px;
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      align-items: center;
+      padding: 12px 15px;
+      background: var(--card-color);
+      border-radius: var(--border-radius);
+      border-left: 4px solid var(--primary-color);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: all 0.2s ease;
+      position: relative;
     }
-    input[type="checkbox"] {
-      margin-right: 10px;
-      transform: scale(1.5);
+    
+    .task:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
-    #historyButton {
-      display: block;
-      margin: 20px auto;
-      padding: 10px 20px;
-      background-color: #d35400;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
+    
+    .task.completed {
+      border-left-color: var(--success-color);
+      background-color: rgba(46, 204, 113, 0.05);
+    }
+    
+    .task.overdue {
+      border-left-color: var(--danger-color);
+      background-color: rgba(231, 76, 60, 0.05);
+    }
+    
+    .overdue-badge {
+      position: absolute;
+      right: 10px;
+      background-color: var(--danger-color);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    
+    .overdue-badge.warning {
+      background-color: var(--warning-color);
+    }
+    
+    .pulse-animation {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 8px rgba(231, 76, 60, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+      }
+    }
+    
+    .task input[type="checkbox"] {
+      margin-right: 15px;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--primary-color);
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 16px;
+      position: relative;
+      transition: all 0.2s;
     }
+    
+    .task.overdue input[type="checkbox"] {
+      border-color: var(--danger-color);
+    }
+    
+    .task input[type="checkbox"]:checked {
+      background-color: var(--success-color);
+      border-color: var(--success-color);
+    }
+    
+    .task input[type="checkbox"]:checked::after {
+      content: '✓';
+      font-size: 14px;
+      color: white;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    .task label {
+      font-size: 1rem;
+      cursor: pointer;
+      flex-grow: 1;
+      margin-right: 20px; /* Space for the badge */
+    }
+    
+    .task.overdue label {
+      color: var(--danger-color);
+      font-weight: 500;
+    }
+    
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 10px 20px;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    button:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-2px);
+    }
+    
     #history {
       margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
+    
     .history-day {
-      background: #fff;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 15px;
+      border-radius: var(--border-radius);
+      background: var(--card-color);
+      box-shadow: var(--shadow);
+    }
+    
+    .history-day strong {
+      display: block;
       margin-bottom: 10px;
+      color: var(--primary-color);
+    }
+    
+    .history-day ul {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 5px;
+    }
+    
+    .progress-container {
+      margin-top: 20px;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      background-color: #e0e0e0;
+      border-radius: 10px;
+      height: 15px;
+      position: relative;
+      margin-top: 5px;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      border-radius: 10px;
+      background-color: var(--success-color);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    
+    .weekly-progress {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .day-progress {
+      flex: 1;
+      text-align: center;
+    }
+    
+    .day-circle {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 5px;
+      font-weight: bold;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .day-fill {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: var(--success-color);
+      transition: height 0.3s ease;
+    }
+    
+    .day-text {
+      position: relative;
+      z-index: 1;
+      color: var(--text-color);
+    }
+    
+    .day-label {
+      font-size: 0.8rem;
+      color: var(--text-color);
+    }
+    
+    .streak-container {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .hidden {
+      display: none;
+    }
+    
+    #print-button {
+      background-color: #7f8c8d;
+    }
+    
+    .overdue-summary {
+      background-color: rgba(231, 76, 60, 0.1);
+      border-radius: var(--border-radius);
+      padding: 15px;
+      margin-bottom: 20px;
+      border-left: 4px solid var(--danger-color);
+    }
+    
+    .overdue-summary h3 {
+      color: var(--danger-color);
+      margin-top: 0;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    
+    .overdue-summary ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    
+    .overdue-summary li {
+      margin-bottom: 5px;
+    }
+    
+    @media print {
+      body {
+        padding: 0;
+        background: white;
+      }
+      .buttons, #history {
+        display: none;
+      }
+      .card {
+        box-shadow: none;
+        margin-bottom: 20px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .task-grid {
+        grid-template-columns: 1fr;
+      }
+      .weekly-progress {
+        flex-wrap: wrap;
+      }
+      .day-progress {
+        min-width: 60px;
+      }
+      .buttons {
+        flex-direction: column;
+      }
+      button {
+        width: 100%;
+        justify-content: center;
+      }
     }
   </style>
 </head>
 <body>
 
-<h1>Daily Tracker</h1>
-<div class="date" id="currentDate"></div>
-
-<div class="task">
-  <input type="checkbox" id="wake">
-  <label for="wake">Wake at 7 AM</label>
+<div class="container">
+  <header>
+    <h1>Daily Tracker Pro</h1>
+    <div class="date" id="currentDate"></div>
+  </header>
+  
+  <div id="overdueContainer" class="hidden">
+    <div class="overdue-summary">
+      <h3>⚠️ Overdue Tasks</h3>
+      <ul id="overdueList"></ul>
+    </div>
+  </div>
+  
+  <div class="card">
+    <div class="task-grid" id="taskGrid">
+      <!-- Tasks will be generated by JavaScript -->
+    </div>
+    
+    <div class="progress-container">
+      <h3>Today's Progress</h3>
+      <div class="progress-bar">
+        <div class="progress-fill" id="todayProgress"></div>
+      </div>
+      <div id="progressPercentage" style="text-align: right; margin-top: 5px;"></div>
+    </div>
+  </div>
+  
+  <div class="card">
+    <h3>Weekly Progress</h3>
+    <div class="weekly-progress" id="weeklyProgress">
+      <!-- Weekly progress will be generated by JavaScript -->
+    </div>
+    <div class="streak-container">
+      <span id="currentStreak">Current streak: 0 days</span>
+    </div>
+  </div>
+  
+  <div class="buttons">
+    <button id="historyButton">
+      <span>View History</span>
+    </button>
+    <button id="resetButton">
+      <span>Reset Today</span>
+    </button>
+    <button id="exportButton">
+      <span>Export Data</span>
+    </button>
+    <button id="print-button">
+      <span>Print</span>
+    </button>
+  </div>
+  
+  <div id="history" class="hidden"></div>
 </div>
-
-<div class="task">
-  <input type="checkbox" id="sleep">
-  <label for="sleep">Sleep by 11 PM</label>
-</div>
-
-<div class="task">
-  <input type="checkbox" id="physical">
-  <label for="physical">Physical Activity</label>
-</div>
-
-<div class="task">
-  <input type="checkbox" id="meditate">
-  <label for="meditate">Meditate</label>
-</div>
-
-<div class="task">
-  <input type="checkbox" id="nature">
-  <label for="nature">Walk in Nature</label>
-</div>
-
-<div class="task">
-  <input type="checkbox" id="read">
-  <label for="read">Read</label>
-</div>
-
-<div class="task">
-  <input type="checkbox" id="focus">
-  <label for="focus">Protect Your Focus (No Porn)</label>
-</div>
-
-<div class="task">
-  <input type="checkbox" id="learn">
-  <label for="learn">Learn New</label>
-</div>
-
-<button id="historyButton">View History</button>
-<div id="history"></div>
 
 <script>
+  // Define tasks with descriptions and categories
+  const taskDefinitions = [
+    { id: 'wake', label: 'Wake at 7 AM', category: 'routine', critical: true },
+    { id: 'sleep', label: 'Sleep by 11 PM', category: 'routine', critical: true },
+    { id: 'physical', label: 'Physical Activity', category: 'health', critical: true },
+    { id: 'meditate', label: 'Meditate', category: 'wellbeing', critical: false },
+    { id: 'nature', label: 'Walk in Nature', category: 'wellbeing', critical: false },
+    { id: 'read', label: 'Read', category: 'learning', critical: false },
+    { id: 'focus', label: 'Protect Your Focus', category: 'discipline', critical: true },
+    { id: 'learn', label: 'Learn Something New', category: 'learning', critical: false },
+    { id: 'socialize', label: 'Socialize and Enjoy', category: 'wellbeing', critical: false }
+  ];
+
+  // Initialize
   const today = new Date();
   const dateString = today.toISOString().split('T')[0];
-  document.getElementById('currentDate').innerText = dateString;
+  document.getElementById('currentDate').innerText = formatDate(today);
 
-  const tasks = ['wake', 'sleep', 'physical', 'meditate', 'nature', 'read', 'focus', 'learn'];
+  // Get yesterday's date for carrying forward data
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayString = yesterday.toISOString().split('T')[0];
 
-  // Load today's progress if exists
-  const savedProgress = JSON.parse(localStorage.getItem('dailyProgress_' + dateString)) || {};
-
-  tasks.forEach(task => {
-    const checkbox = document.getElementById(task);
-
-    // Load saved state for today
-    if (savedProgress[task]) {
-      checkbox.checked = true;
-    }
-
-    // Save today's state on change
-    checkbox.addEventListener('change', () => {
-      const todayProgress = tasks.reduce((acc, t) => {
-        acc[t] = document.getElementById(t).checked;
-        return acc;
-      }, {});
-      localStorage.setItem('dailyProgress_' + dateString, JSON.stringify(todayProgress));
+  // Track overdue tasks
+  let overdueTasks = {};
+  
+  // Generate task elements
+  function generateTasks() {
+    const taskGrid = document.getElementById('taskGrid');
+    taskGrid.innerHTML = '';
+    
+    // Find overdue tasks
+    checkForOverdueTasks();
+    
+    taskDefinitions.forEach(task => {
+      const taskDiv = document.createElement('div');
+      taskDiv.className = 'task';
+      taskDiv.id = `task-${task.id}`;
+      
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = task.id;
+      
+      const label = document.createElement('label');
+      label.htmlFor = task.id;
+      label.textContent = task.label;
+      
+      taskDiv.appendChild(checkbox);
+      taskDiv.appendChild(label);
+      
+      // Add overdue badge if task is overdue
+      if (overdueTasks[task.id]) {
+        const days = overdueTasks[task.id].days;
+        const isWarning = days <= 3;
+        const isCritical = days > 3;
+        
+        if (isWarning || isCritical) {
+          taskDiv.classList.add('overdue');
+          if (isCritical) {
+            taskDiv.classList.add('pulse-animation');
+          }
+          
+          const overdueBadge = document.createElement('span');
+          overdueBadge.className = `overdue-badge ${isWarning ? 'warning' : ''}`;
+          overdueBadge.textContent = `${days} day${days !== 1 ? 's' : ''} overdue!`;
+          taskDiv.appendChild(overdueBadge);
+        }
+      }
+      
+      taskGrid.appendChild(taskDiv);
+      
+      // Set up event listeners
+      checkbox.addEventListener('change', () => {
+        if (checkbox.checked) {
+          taskDiv.classList.add('completed');
+        } else {
+          taskDiv.classList.remove('completed');
+        }
+        saveTodayProgress();
+        updateProgress();
+      });
     });
-  });
+  }
 
-  // View history
+  // Check for overdue tasks
+  function checkForOverdueTasks() {
+    overdueTasks = {};
+    const overdueList = document.getElementById('overdueList');
+    overdueList.innerHTML = '';
+    
+    // Get the last 7 days
+    const pastDays = [];
+    for (let i = 1; i <= 7; i++) {
+      const pastDate = new Date(today);
+      pastDate.setDate(today.getDate() - i);
+      pastDays.push(pastDate);
+    }
+    
+    // Check each past day for incomplete tasks
+    pastDays.forEach(date => {
+      const dateStr = date.toISOString().split('T')[0];
+      const dayData = JSON.parse(localStorage.getItem('dailyProgress_' + dateStr)) || {};
+      
+      taskDefinitions.forEach(task => {
+        // Skip the new "socialize" task for past days since it didn't exist
+        if (task.id === 'socialize' && dateStr !== today.toISOString().split('T')[0]) {
+          return;
+        }
+        
+        // If task wasn't completed on a past day
+        if (dayData[task.id] === false || dayData[task.id] === undefined) {
+          // If it's not already in overdue tasks or has more days overdue
+          if (!overdueTasks[task.id] || overdueTasks[task.id].days < getDaysDifference(date, today)) {
+            overdueTasks[task.id] = {
+              days: getDaysDifference(date, today),
+              date: dateStr,
+              task: task
+            };
+          }
+        }
+      });
+    });
+    
+    // Display overdue tasks summary
+    const overdueContainer = document.getElementById('overdueContainer');
+    if (Object.keys(overdueTasks).length > 0) {
+      overdueContainer.classList.remove('hidden');
+      
+      // Sort overdue tasks by days overdue (descending)
+      const sortedOverdueTasks = Object.values(overdueTasks).sort((a, b) => b.days - a.days);
+      
+      // Create list items for overdue tasks
+      sortedOverdueTasks.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${item.task.label}</strong>: ${item.days} day${item.days !== 1 ? 's' : ''} overdue (since ${formatDate(new Date(item.date))})`;
+        overdueList.appendChild(li);
+      });
+    } else {
+      overdueContainer.classList.add('hidden');
+    }
+  }
+
+  // Calculate days difference between two dates
+  function getDaysDifference(date1, date2) {
+    const oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+    return Math.round(Math.abs((date1 - date2) / oneDay));
+  }
+
+  // Load and save progress
+  function saveTodayProgress() {
+    const todayProgress = taskDefinitions.reduce((acc, task) => {
+      acc[task.id] = document.getElementById(task.id).checked;
+      return acc; 
+    }, {});
+    
+    localStorage.setItem('dailyProgress_' + dateString, JSON.stringify(todayProgress));
+  }
+  
+  function loadTodayProgress() {
+    // First check if we have today's data
+    let savedProgress = JSON.parse(localStorage.getItem('dailyProgress_' + dateString)) || {};
+    
+    // If we don't have today's data, try to get yesterday's data and import it
+    if (Object.keys(savedProgress).length === 0) {
+      const yesterdayProgress = JSON.parse(localStorage.getItem('dailyProgress_' + yesterdayString)) || {};
+      
+      // Only copy specific fields from yesterday, default all to unchecked
+      taskDefinitions.forEach(task => {
+        savedProgress[task.id] = false; // Default to unchecked
+      });
+      
+      // Save this as today's starting point
+      localStorage.setItem('dailyProgress_' + dateString, JSON.stringify(savedProgress));
+    }
+    
+    taskDefinitions.forEach(task => {
+      const checkbox = document.getElementById(task.id);
+      const taskDiv = document.getElementById(`task-${task.id}`);
+      
+      if (savedProgress[task.id]) {
+        checkbox.checked = true;
+        taskDiv.classList.add('completed');
+      } else {
+        checkbox.checked = false;
+        taskDiv.classList.remove('completed');
+      }
+    });
+    
+    updateProgress();
+  }
+
+  // Update progress displays
+  function updateProgress() {
+    updateTodayProgress();
+    updateWeeklyProgress();
+    calculateStreak();
+  }
+  
+  function updateTodayProgress() {
+    const completed = taskDefinitions.filter(task => document.getElementById(task.id).checked).length;
+    const total = taskDefinitions.length;
+    const percentage = Math.round((completed / total) * 100);
+    
+    document.getElementById('todayProgress').style.width = `${percentage}%`;
+    document.getElementById('progressPercentage').textContent = `${completed}/${total} (${percentage}%)`;
+  }
+  
+  function updateWeeklyProgress() {
+    const weeklyProgressDiv = document.getElementById('weeklyProgress');
+    weeklyProgressDiv.innerHTML = '';
+    
+    // Get dates for the current week (starting from Sunday)
+    const currentDay = today.getDay(); // 0 = Sunday, 6 = Saturday
+    const weekDates = [];
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - currentDay + i);
+      weekDates.push(date);
+    }
+    
+    // Create progress indicators for each day
+    weekDates.forEach(date => {
+      const dateString = date.toISOString().split('T')[0];
+      const dayProgress = document.createElement('div');
+      dayProgress.className = 'day-progress';
+      
+      const dayCircle = document.createElement('div');
+      dayCircle.className = 'day-circle';
+      
+      const dayFill = document.createElement('div');
+      dayFill.className = 'day-fill';
+      
+      const dayText = document.createElement('div');
+      dayText.className = 'day-text';
+      dayText.textContent = date.getDate();
+      
+      const dayLabel = document.createElement('div');
+      dayLabel.className = 'day-label';
+      dayLabel.textContent = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()];
+      
+      // Check if we have progress data for this day
+      const dayData = JSON.parse(localStorage.getItem('dailyProgress_' + dateString)) || {};
+      
+      // Calculate completion, excluding the socialize task for past dates
+      let taskCount = taskDefinitions.length;
+      if (dateString !== today.toISOString().split('T')[0]) {
+        // For past days, don't count the new socialize task
+        taskCount -= 1;
+      }
+      
+      const completed = Object.keys(dayData)
+        .filter(key => key !== 'socialize' || dateString === today.toISOString().split('T')[0])
+        .filter(key => dayData[key]).length;
+      
+      const percentage = taskCount > 0 ? (completed / taskCount) * 100 : 0;
+      
+      dayFill.style.height = `${percentage}%`;
+      
+      // Highlight current day
+      if (dateString === today.toISOString().split('T')[0]) {
+        dayCircle.style.border = '2px solid var(--primary-color)';
+      }
+      
+      // Check if this day had any missed tasks
+      const missedTasks = Object.keys(dayData)
+        .filter(key => key !== 'socialize' || dateString === today.toISOString().split('T')[0])
+        .filter(key => dayData[key] === false).length;
+        
+      if (missedTasks > 0 && dateString < today.toISOString().split('T')[0]) {
+        dayCircle.style.border = '2px solid var(--danger-color)';
+      }
+      
+      dayCircle.appendChild(dayFill);
+      dayCircle.appendChild(dayText);
+      dayProgress.appendChild(dayCircle);
+      dayProgress.appendChild(dayLabel);
+      weeklyProgressDiv.appendChild(dayProgress);
+    });
+  }
+  
+  // Calculate and display streak
+  function calculateStreak() {
+    let streak = 0;
+    let currentDate = new Date();
+    
+    // Check backward from today
+    while (true) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const dayData = JSON.parse(localStorage.getItem('dailyProgress_' + dateStr)) || {};
+      
+      // Filter out the socialize task for past days
+      const relevantKeys = Object.keys(dayData).filter(key => {
+        return key !== 'socialize' || dateStr === today.toISOString().split('T')[0];
+      });
+      
+      // If we have any completed tasks for this day, increase streak
+      const completed = relevantKeys.filter(key => dayData[key]).length;
+      if (completed > 0) {
+        streak++;
+        // Go to previous day
+        currentDate.setDate(currentDate.getDate() - 1);
+      } else {
+        break;
+      }
+    }
+    
+    document.getElementById('currentStreak').textContent = `Current streak: ${streak} day${streak !== 1 ? 's' : ''}`;
+  }
+
+  // View history function
   document.getElementById('historyButton').addEventListener('click', () => {
     const historyDiv = document.getElementById('history');
-    historyDiv.innerHTML = '';
+    historyDiv.classList.toggle('hidden');
+    
+    if (!historyDiv.classList.contains('hidden')) {
+      historyDiv.innerHTML = '';
+      
+      Object.keys(localStorage)
+        .filter(key => key.startsWith('dailyProgress_'))
+        .sort((a, b) => b.localeCompare(a)) // Sort by date, newest first
+        .forEach(key => {
+          const date = key.replace('dailyProgress_', '');
+          const data = JSON.parse(localStorage.getItem(key));
+          
+          const dayDiv = document.createElement('div');
+          dayDiv.className = 'history-day';
+          
+          // Calculate completion percentage, excluding socialize for past days
+          const isToday = date === dateString;
+          const relevantTasks = taskDefinitions.filter(task => {
+            return task.id !== 'socialize' || isToday;
+          });
+          
+          const completed = relevantTasks
+            .filter(task => data[task.id])
+            .length;
+            
+          const total = relevantTasks.length;
+          const percentage = Math.round((completed / total) * 100);
+          
+          let content = `<strong>${formatDate(new Date(date))} - ${percentage}% complete</strong><ul>`;
+          
+          // Get all the task IDs in the data
+          const taskIds = Object.keys(data);
+          
+          // For each task that should exist on this date
+          taskDefinitions.forEach(task => {
+            // Skip socialize for past days
+            if (task.id === 'socialize' && date !== dateString) {
+              return;
+            }
+            
+            if (taskIds.includes(task.id)) {
+              // Mark overdue tasks from previous days
+              const taskStatus = data[task.id] ? '✅' : '❌';
+              const isOverdue = !data[task.id] && date < today.toISOString().split('T')[0];
+              
+              content += `<li>${task.label}: ${taskStatus}${isOverdue ? ' <span style="color:var(--danger-color);font-weight:bold">(Overdue)</span>' : ''}</li>`;
+            }
+          });
+          
+          content += '</ul>';
+          
+          dayDiv.innerHTML = content;
+          historyDiv.appendChild(dayDiv);
+        });
+    }
+  });
 
+  // Reset today's progress
+  document.getElementById('resetButton').addEventListener('click', () => {
+    if (confirm('Are you sure you want to reset today\'s progress?')) {
+      taskDefinitions.forEach(task => {
+        document.getElementById(task.id).checked = false;
+        document.getElementById(`task-${task.id}`).classList.remove('completed');
+      });
+      saveTodayProgress();
+      updateProgress();
+    }
+  });
+
+  // Export data as JSON
+  document.getElementById('exportButton').addEventListener('click', () => {
+    const data = {};
+    
     Object.keys(localStorage)
       .filter(key => key.startsWith('dailyProgress_'))
-      .sort()
       .forEach(key => {
-        const date = key.replace('dailyProgress_', '');
-        const data = JSON.parse(localStorage.getItem(key));
-
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'history-day';
-
-        let content = `<strong>${date}</strong><ul>`;
-        tasks.forEach(task => {
-          content += `<li>${task}: ${data[task] ? '✅' : '❌'}</li>`;
-        });
-        content += '</ul>';
-
-        dayDiv.innerHTML = content;
-        historyDiv.appendChild(dayDiv);
+        data[key] = JSON.parse(localStorage.getItem(key));
       });
+    
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "daily-tracker-export.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
   });
+
+  // Print functionality
+  document.getElementById('print-button').addEventListener('click', () => {
+    window.print();
+  });
+
+  // Format date helper function
+  function formatDate(date) {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString(undefined, options);
+  }
+
+  // Initialize the page
+  generateTasks();
+  loadTodayProgress();
+  updateProgress();
 </script>
 
 </body>
