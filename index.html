@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warrior Daily Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #d35400;
+    }
+    .date {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: bold;
+      font-size: 18px;
+    }
+    .task {
+      margin: 10px 0;
+      padding: 10px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    input[type="checkbox"] {
+      margin-right: 10px;
+      transform: scale(1.5);
+    }
+    #historyButton {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      background-color: #d35400;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    #history {
+      margin-top: 20px;
+    }
+    .history-day {
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Warrior Daily Tracker</h1>
+<div class="date" id="currentDate"></div>
+
+<div class="task">
+  <input type="checkbox" id="wake">
+  <label for="wake">Wake at 7 AM</label>
+</div>
+
+<div class="task">
+  <input type="checkbox" id="sleep">
+  <label for="sleep">Sleep by 11 PM</label>
+</div>
+
+<div class="task">
+  <input type="checkbox" id="physical">
+  <label for="physical">Physical Activity</label>
+</div>
+
+<div class="task">
+  <input type="checkbox" id="meditate">
+  <label for="meditate">Meditate</label>
+</div>
+
+<div class="task">
+  <input type="checkbox" id="nature">
+  <label for="nature">Walk in Nature</label>
+</div>
+
+<div class="task">
+  <input type="checkbox" id="read">
+  <label for="read">Read</label>
+</div>
+
+<div class="task">
+  <input type="checkbox" id="focus">
+  <label for="focus">Protect Your Focus (No Porn)</label>
+</div>
+
+<div class="task">
+  <input type="checkbox" id="learn">
+  <label for="learn">Learn New</label>
+</div>
+
+<button id="historyButton">View History</button>
+<div id="history"></div>
+
+<script>
+  const today = new Date();
+  const dateString = today.toISOString().split('T')[0];
+  document.getElementById('currentDate').innerText = dateString;
+
+  const tasks = ['wake', 'sleep', 'physical', 'meditate', 'nature', 'read', 'focus', 'learn'];
+
+  // Load today's progress if exists
+  const savedProgress = JSON.parse(localStorage.getItem('dailyProgress_' + dateString)) || {};
+
+  tasks.forEach(task => {
+    const checkbox = document.getElementById(task);
+
+    // Load saved state for today
+    if (savedProgress[task]) {
+      checkbox.checked = true;
+    }
+
+    // Save today's state on change
+    checkbox.addEventListener('change', () => {
+      const todayProgress = tasks.reduce((acc, t) => {
+        acc[t] = document.getElementById(t).checked;
+        return acc;
+      }, {});
+      localStorage.setItem('dailyProgress_' + dateString, JSON.stringify(todayProgress));
+    });
+  });
+
+  // View history
+  document.getElementById('historyButton').addEventListener('click', () => {
+    const historyDiv = document.getElementById('history');
+    historyDiv.innerHTML = '';
+
+    Object.keys(localStorage)
+      .filter(key => key.startsWith('dailyProgress_'))
+      .sort()
+      .forEach(key => {
+        const date = key.replace('dailyProgress_', '');
+        const data = JSON.parse(localStorage.getItem(key));
+
+        const dayDiv = document.createElement('div');
+        dayDiv.className = 'history-day';
+
+        let content = `<strong>${date}</strong><ul>`;
+        tasks.forEach(task => {
+          content += `<li>${task}: ${data[task] ? '✅' : '❌'}</li>`;
+        });
+        content += '</ul>';
+
+        dayDiv.innerHTML = content;
+        historyDiv.appendChild(dayDiv);
+      });
+  });
+</script>
+
+</body>
+</html>
