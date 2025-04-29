@@ -109,6 +109,14 @@
       background-color: var(--warning-color);
     }
     
+    /* New compulsory badge styling */
+    .compulsory-badge {
+      color: var(--danger-color);
+      font-weight: bold;
+      margin-left: 10px;
+      font-size: 0.8rem;
+    }
+    
     .pulse-animation {
       animation: pulse 2s infinite;
     }
@@ -436,7 +444,7 @@
     { id: 'read', label: 'Read', category: 'learning', critical: false },
     { id: 'focus', label: 'Protect Your Focus', category: 'discipline', critical: true },
     { id: 'learn', label: 'Learn Something New', category: 'learning', critical: false },
-    { id: 'socialize', label: 'Socialize and Enjoy', category: 'wellbeing', critical: false }
+    { id: 'socialize', label: 'Socialize and Enjoy', category: 'wellbeing', critical: false } // Added new task
   ];
 
   // Initialize
@@ -444,13 +452,16 @@
   const dateString = today.toISOString().split('T')[0];
   document.getElementById('currentDate').innerText = formatDate(today);
 
-  // Get yesterday's date for carrying forward data
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayString = yesterday.toISOString().split('T')[0];
-
   // Track overdue tasks
   let overdueTasks = {};
+  
+  // Track yesterday's incomplete tasks
+  let yesterdayIncompleteTasks = [];
+  
+  // Get yesterday's date
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const yesterdayString = yesterday.toISOString().split('T')[0];
   
   // Generate task elements
   function generateTasks() {
@@ -458,7 +469,10 @@
     taskGrid.innerHTML = '';
     
     // Find overdue tasks
-    checkForOverdueTasks();
+    //checkForOverdueTasks();
+    
+    // Find yesterday's incomplete tasks
+    loadYesterdayIncompleteTasks();
     
     taskDefinitions.forEach(task => {
       const taskDiv = document.createElement('div');
@@ -472,6 +486,14 @@
       const label = document.createElement('label');
       label.htmlFor = task.id;
       label.textContent = task.label;
+      
+      // Add compulsory badge if task was incomplete yesterday
+      if (yesterdayIncompleteTasks.includes(task.id)) {
+        const compulsoryBadge = document.createElement('span');
+        compulsoryBadge.className = 'compulsory-badge';
+        compulsoryBadge.textContent = 'Compulsory today!';
+        label.appendChild(compulsoryBadge);
+      }
       
       taskDiv.appendChild(checkbox);
       taskDiv.appendChild(label);
@@ -510,6 +532,20 @@
     });
   }
 
+  // Load yesterday's incomplete tasks
+  function loadYesterdayIncompleteTasks() {
+    const savedYesterdayProgress = JSON.parse(localStorage.getItem('dailyProgress_' + yesterdayString)) || {};
+    
+    yesterdayIncompleteTasks = [];
+    
+    taskDefinitions.forEach(task => {
+      // If the task wasn't completed yesterday, add to our list
+      if (savedYesterdayProgress[task.id] === false || savedYesterdayProgress[task.id] === undefined) {
+        yesterdayIncompleteTasks.push(task.id);
+      }
+    });
+  }
+
   // Check for overdue tasks
   function checkForOverdueTasks() {
     overdueTasks = {};
@@ -530,11 +566,6 @@
       const dayData = JSON.parse(localStorage.getItem('dailyProgress_' + dateStr)) || {};
       
       taskDefinitions.forEach(task => {
-        // Skip the new "socialize" task for past days since it didn't exist
-        if (task.id === 'socialize' && dateStr !== today.toISOString().split('T')[0]) {
-          return;
-        }
-        
         // If task wasn't completed on a past day
         if (dayData[task.id] === false || dayData[task.id] === undefined) {
           // If it's not already in overdue tasks or has more days overdue
@@ -585,21 +616,7 @@
   }
   
   function loadTodayProgress() {
-    // First check if we have today's data
-    let savedProgress = JSON.parse(localStorage.getItem('dailyProgress_' + dateString)) || {};
-    
-    // If we don't have today's data, try to get yesterday's data and import it
-    if (Object.keys(savedProgress).length === 0) {
-      const yesterdayProgress = JSON.parse(localStorage.getItem('dailyProgress_' + yesterdayString)) || {};
-      
-      // Only copy specific fields from yesterday, default all to unchecked
-      taskDefinitions.forEach(task => {
-        savedProgress[task.id] = false; // Default to unchecked
-      });
-      
-      // Save this as today's starting point
-      localStorage.setItem('dailyProgress_' + dateString, JSON.stringify(savedProgress));
-    }
+    const savedProgress = JSON.parse(localStorage.getItem('dailyProgress_' + dateString)) || {};
     
     taskDefinitions.forEach(task => {
       const checkbox = document.getElementById(task.id);
@@ -669,19 +686,9 @@
       
       // Check if we have progress data for this day
       const dayData = JSON.parse(localStorage.getItem('dailyProgress_' + dateString)) || {};
-      
-      // Calculate completion, excluding the socialize task for past dates
-      let taskCount = taskDefinitions.length;
-      if (dateString !== today.toISOString().split('T')[0]) {
-        // For past days, don't count the new socialize task
-        taskCount -= 1;
-      }
-      
-      const completed = Object.keys(dayData)
-        .filter(key => key !== 'socialize' || dateString === today.toISOString().split('T')[0])
-        .filter(key => dayData[key]).length;
-      
-      const percentage = taskCount > 0 ? (completed / taskCount) * 100 : 0;
+      const completed = Object.values(dayData).filter(Boolean).length;
+      const total = taskDefinitions.length;
+      const percentage = total > 0 ? (completed / total) * 100 : 0;
       
       dayFill.style.height = `${percentage}%`;
       
@@ -691,10 +698,7 @@
       }
       
       // Check if this day had any missed tasks
-      const missedTasks = Object.keys(dayData)
-        .filter(key => key !== 'socialize' || dateString === today.toISOString().split('T')[0])
-        .filter(key => dayData[key] === false).length;
-        
+      const missedTasks = taskDefinitions.filter(task => dayData[task.id] === false || dayData[task.id] === undefined).length;
       if (missedTasks > 0 && dateString < today.toISOString().split('T')[0]) {
         dayCircle.style.border = '2px solid var(--danger-color)';
       }
@@ -717,13 +721,8 @@
       const dateStr = currentDate.toISOString().split('T')[0];
       const dayData = JSON.parse(localStorage.getItem('dailyProgress_' + dateStr)) || {};
       
-      // Filter out the socialize task for past days
-      const relevantKeys = Object.keys(dayData).filter(key => {
-        return key !== 'socialize' || dateStr === today.toISOString().split('T')[0];
-      });
-      
       // If we have any completed tasks for this day, increase streak
-      const completed = relevantKeys.filter(key => dayData[key]).length;
+      const completed = Object.values(dayData).filter(Boolean).length;
       if (completed > 0) {
         streak++;
         // Go to previous day
@@ -754,40 +753,19 @@
           const dayDiv = document.createElement('div');
           dayDiv.className = 'history-day';
           
-          // Calculate completion percentage, excluding socialize for past days
-          const isToday = date === dateString;
-          const relevantTasks = taskDefinitions.filter(task => {
-            return task.id !== 'socialize' || isToday;
-          });
-          
-          const completed = relevantTasks
-            .filter(task => data[task.id])
-            .length;
-            
-          const total = relevantTasks.length;
+          // Calculate completion percentage
+          const completed = Object.values(data).filter(Boolean).length;
+          const total = taskDefinitions.length;
           const percentage = Math.round((completed / total) * 100);
           
           let content = `<strong>${formatDate(new Date(date))} - ${percentage}% complete</strong><ul>`;
-          
-          // Get all the task IDs in the data
-          const taskIds = Object.keys(data);
-          
-          // For each task that should exist on this date
           taskDefinitions.forEach(task => {
-            // Skip socialize for past days
-            if (task.id === 'socialize' && date !== dateString) {
-              return;
-            }
+            // Mark overdue tasks from previous days
+            const taskStatus = data[task.id] ? '✅' : '❌';
+            const isOverdue = !data[task.id] && date < today.toISOString().split('T')[0];
             
-            if (taskIds.includes(task.id)) {
-              // Mark overdue tasks from previous days
-              const taskStatus = data[task.id] ? '✅' : '❌';
-              const isOverdue = !data[task.id] && date < today.toISOString().split('T')[0];
-              
-              content += `<li>${task.label}: ${taskStatus}${isOverdue ? ' <span style="color:var(--danger-color);font-weight:bold">(Overdue)</span>' : ''}</li>`;
-            }
+            content += `<li>${task.label}: ${taskStatus}${isOverdue ? ' <span style="color:var(--danger-color);font-weight:bold">(Overdue)</span>' : ''}</li>`;
           });
-          
           content += '</ul>';
           
           dayDiv.innerHTML = content;
